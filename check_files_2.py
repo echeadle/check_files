@@ -6,7 +6,8 @@ Purpose: Rock the Casbah
 """
 
 import argparse
-
+import hashlib
+import os
 
 # --------------------------------------------------
 def get_args():
@@ -48,6 +49,8 @@ def get_args():
 
     return parser.parse_args()
 
+def get_skipped_dirs():
+    return list(('anaconda3','snap','venv','temp'))
 
 # --------------------------------------------------
 def main():
@@ -66,6 +69,29 @@ def main():
     print(f'flag_arg = "{flag_arg}"')
     print(f'positional = "{pos_arg}"')
 
+    skip_dirs = get_skipped_dirs()
+    root_dir = '/home/echeadle'
+
+    for folderName, subfolders, filenames in os.walk(root_dir):
+        #print('The current folder is ' + folderName)
+        subfolders[:] = [f for f in subfolders if not f in skip_dirs]
+        subfolders[:] = [f for f in subfolders if not f.startswith('.')]
+        for subfolder in subfolders:
+            #print('SUBFOLDER OF ' + folderName + ': ' + subfolder)
+            pass
+        filenames[:] = [f for f in filenames if  not f.startswith('.')]
+        filenames[:] = [f for f in filenames if  not f.startswith('__')]
+        #filenames[:] = [f for f in filenames if  re.findSall('test', f, flags=re.IGNORECASE)]
+        for filename in filenames:
+            #print('FILE INSIDE ' + folderName + ': '+ filename)
+            full_file_path = os.path.join(folderName, filename)      
+            the_hash = hashlib.sha256()   
+            if os.path.isfile(full_file_path):
+                with open(full_file_path, 'rb') as fn:
+                    for line in fn.readlines():
+                        the_hash.update(line)
+                fn.close()
+                print(f"{folderName},{filename},{the_hash.hexdigest()}")
 
 # --------------------------------------------------
 if __name__ == '__main__':
